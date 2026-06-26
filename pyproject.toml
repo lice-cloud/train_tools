@@ -1,0 +1,12 @@
+[project]
+name = "train-tools"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pywebview>=5.4.0",
+]
+
+[project.scripts]
+train-tools = "backend.desktop:start_app"

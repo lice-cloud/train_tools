@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+
+# Build artifacts
+dist/
+build/
+*.spec
+*.exe
+
+# IDE
+.idea/
+.vscode/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project
+test_*.py
+make.cmd
