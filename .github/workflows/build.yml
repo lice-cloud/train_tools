@@ -60,9 +60,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
+          Compress-Archive -Path dist/train-tools/* -DestinationPath dist/train-tools.zip -Force
           gh release create ${{ github.ref_name }} --title "${{ github.ref_name }}" --generate-notes 2>$null
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Release already exists, uploading to existing release..."
           }
-          gh release upload ${{ github.ref_name }} dist/train-tools.exe dist/train-tools/ --clobber
+          gh release upload ${{ github.ref_name }} dist/train-tools.exe dist/train-tools.zip --clobber
           if ($LASTEXITCODE -ne 0) { throw "Release upload failed" }
