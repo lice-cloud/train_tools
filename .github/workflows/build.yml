@@ -23,6 +23,13 @@ jobs:
       - name: Build single-file exe
         run: make build
 
+      - name: Save exe before dir build
+        run: |
+          if (Test-Path dist/train-tools.exe) {
+            New-Item -ItemType Directory -Force -Path _temp | Out-Null
+            Copy-Item dist/train-tools.exe _temp/
+          }
+
       - name: Upload single-file exe
         uses: actions/upload-artifact@v6
         with:
@@ -32,8 +39,23 @@ jobs:
       - name: Build directory distribution
         run: make build-dir
 
+      - name: Restore exe after dir build
+        run: |
+          if (Test-Path _temp/train-tools.exe) {
+            Copy-Item _temp/train-tools.exe dist/train-tools.exe
+            Remove-Item -Recurse -Force _temp
+          }
+
       - name: Upload directory distribution
         uses: actions/upload-artifact@v6
         with:
           name: train-tools-dir
           path: dist/train-tools/
+
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} --title "${{ github.ref_name }}" --generate-notes 2>$null
+          gh release upload ${{ github.ref_name }} dist/train-tools.exe dist/train-tools/ --clobber
