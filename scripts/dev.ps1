@@ -13,13 +13,18 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+# 确保 uv 可用
+$haveUv = $true
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Host "[Setup] uv not found, installing..." -ForegroundColor Yellow
+    pip install uv 2>&1 | Out-Null
+    $haveUv = $false
+}
+
 # 确保 venv 存在
 if (-not (Test-Path $venvPython)) {
     Write-Host "[Setup] Creating venv and installing Python dependencies..." -ForegroundColor Yellow
-    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-        pip install uv 2>&1 | Out-Null
-    }
-    python -m uv sync
+    if ($haveUv) { uv sync } else { python -m uv sync }
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 }
 
