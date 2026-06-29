@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python dependencies
+        run: uv sync
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Install PyInstaller
+        run: uv run python -m pip install pyinstaller
+
+      - name: Build single-file exe
+        run: uv run pyinstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+
+      - name: Upload single-file exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-tools-exe
+          path: dist/train-tools.exe
+
+      - name: Build directory distribution
+        run: uv run pyinstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+
+      - name: Upload directory distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-tools-dir
+          path: dist/train-tools/

@@ -45,6 +45,7 @@ uv run python    # 在虚拟环境中运行
 ```
 ├── backend/           FastAPI 后端 + pywebview 桌面入口
 ├── frontend/          Vue 3 + Vite 前端
+├── .github/workflows/  GitHub Actions 构建流程
 ├── scripts/           构建脚本 (dev/build/build-dir)
 ├── .gitignore         版本忽略规则
 ├── Makefile           快捷命令
