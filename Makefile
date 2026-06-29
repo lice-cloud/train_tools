@@ -1,8 +1,7 @@
 SHELL := powershell.exe
 
 .PHONY: all desktop dev-backend dev-frontend
-.PHONY: frontend pyinstaller clean-build build-exe build-dir-only
-.PHONY: build build-dir clean
+.PHONY: frontend clean-build build build-dir clean
 
 all: desktop
 
@@ -17,37 +16,21 @@ dev-backend:
 dev-frontend:
 	@cmd.exe /c "cd /d frontend && npm.cmd run dev"
 
-# ==================== Virtual Env ====================
-
-.venv\Scripts\python.exe:
-	pip install uv 2>&1 | Out-Null
-	python -m uv sync
-
 # ==================== Build Steps ====================
 
 frontend:
 	cmd.exe /c "cd /d frontend && npm install && npm run build"
-
-pyinstaller: .venv\Scripts\python.exe
-	.venv\Scripts\python.exe -m ensurepip --upgrade 2>&1 | Out-Null
-	.venv\Scripts\python.exe -m pip install pyinstaller 2>&1
 
 clean-build:
 	cmd.exe /c "if exist dist rmdir /s /q dist"
 	cmd.exe /c "if exist build rmdir /s /q build"
 	cmd.exe /c "del /f /q *.spec 2>nul"
 
-build-exe: .venv\Scripts\python.exe
-	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+build:
+	@powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 
-build-dir-only: .venv\Scripts\python.exe
-	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
-
-# ==================== Convenience ====================
-
-build: frontend pyinstaller clean-build build-exe
-
-build-dir: frontend pyinstaller clean-build build-dir-only
+build-dir:
+	@powershell -ExecutionPolicy Bypass -File scripts\build-dir.ps1
 
 # ==================== Full Clean ====================
 

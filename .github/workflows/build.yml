@@ -20,17 +20,8 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install uv
-        run: pip install uv
-
-      - name: Install Python dependencies
-        run: uv sync
-
-      - name: Build frontend + install PyInstaller
-        run: make frontend pyinstaller
-
       - name: Build single-file exe
-        run: make clean-build build-exe
+        run: make build
 
       - name: Upload single-file exe
         uses: actions/upload-artifact@v4
@@ -39,7 +30,7 @@ jobs:
           path: dist/train-tools.exe
 
       - name: Build directory distribution
-        run: make clean-build build-dir-only
+        run: make build-dir
 
       - name: Upload directory distribution
         uses: actions/upload-artifact@v4
