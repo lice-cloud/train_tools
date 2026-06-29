@@ -33,7 +33,7 @@ jobs:
           npm run build
 
       - name: Install PyInstaller
-        run: uv run python -m pip install pyinstaller
+        run: uv pip install pyinstaller
 
       - name: Build single-file exe
         run: uv run pyinstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
@@ -43,6 +43,9 @@ jobs:
         with:
           name: train-tools-exe
           path: dist/train-tools.exe
+
+      - name: Clean before directory build
+        run: Remove-Item -Recurse -Force dist, build, *.spec -ErrorAction SilentlyContinue
 
       - name: Build directory distribution
         run: uv run pyinstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
