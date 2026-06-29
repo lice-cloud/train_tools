@@ -46,6 +46,7 @@ uv run python    # 在虚拟环境中运行
 ├── backend/           FastAPI 后端 + pywebview 桌面入口
 ├── frontend/          Vue 3 + Vite 前端
 ├── scripts/           构建脚本 (dev/build/build-dir)
+├── .gitignore         版本忽略规则
 ├── Makefile           快捷命令
 ├── pyproject.toml     uv 依赖配置
 └── uv.lock            uv 锁定文件
