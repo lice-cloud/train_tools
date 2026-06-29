@@ -18,7 +18,8 @@ try {
 
     if (-not (Test-Path $venvPython)) {
         Write-Host "[Setup] Creating venv and installing Python dependencies..." -ForegroundColor Yellow
-        if (Get-Command uv -ErrorAction SilentlyContinue) { uv sync } else { python -m uv sync }
+        if (-not (Get-Command uv -ErrorAction SilentlyContinue)) { python -m pip install uv 2>&1 | Out-Null }
+        python -m uv sync
         if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
     }
 
