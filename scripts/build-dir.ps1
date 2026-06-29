@@ -32,8 +32,7 @@ Pop-Location
 
 # 2. 安装构建依赖（到 venv）
 Write-Host "[2/4] Installing build dependencies..." -ForegroundColor Yellow
-& $venvPython -m ensurepip --upgrade 2>&1 | Out-Null
-& $venvPython -m pip install pyinstaller 2>&1
+python -m uv pip install pyinstaller 2>&1
 if ($LASTEXITCODE -ne 0) { throw "pip install pyinstaller failed" }
 
 # 3. 清理旧构建
