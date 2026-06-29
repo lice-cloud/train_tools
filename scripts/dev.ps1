@@ -54,6 +54,8 @@ try {
         Write-Host $result -ForegroundColor Red
     }
 } finally {
-    if (-not $vite.HasExited) { $vite.Kill() }
+    if (-not $vite.HasExited) {
+        taskkill /F /T /PID $vite.Id 2>$null
+    }
     Write-Host "=== Dev stopped ===" -ForegroundColor Cyan
 }
