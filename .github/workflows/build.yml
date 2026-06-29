@@ -26,17 +26,11 @@ jobs:
       - name: Install Python dependencies
         run: uv sync
 
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
-      - name: Install PyInstaller
-        run: uv pip install pyinstaller
+      - name: Build frontend + install PyInstaller
+        run: make frontend pyinstaller
 
       - name: Build single-file exe
-        run: uv run pyinstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+        run: make clean-build build-exe
 
       - name: Upload single-file exe
         uses: actions/upload-artifact@v4
@@ -44,11 +38,8 @@ jobs:
           name: train-tools-exe
           path: dist/train-tools.exe
 
-      - name: Clean before directory build
-        run: Remove-Item -Recurse -Force dist, build, *.spec -ErrorAction SilentlyContinue
-
       - name: Build directory distribution
-        run: uv run pyinstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+        run: make clean-build build-dir-only
 
       - name: Upload directory distribution
         uses: actions/upload-artifact@v4

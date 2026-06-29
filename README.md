@@ -26,8 +26,12 @@ make build-dir
 | make 目标       | 说明                            |
 |----------------|--------------------------------|
 | `desktop`      | 启动 Vite + API + pywebview 桌面窗口 |
-| `build`        | 构建单文件 exe                   |
-| `build-dir`    | 构建目录分发                     |
+| `build`        | 构建单文件 exe（frontend → pyinstaller → build-exe） |
+| `build-dir`    | 构建目录分发（frontend → pyinstaller → build-dir-only） |
+| `frontend`     | 仅构建前端（npm install + npm run build） |
+| `pyinstaller`  | 仅安装 PyInstaller               |
+| `build-exe`    | 仅打包单文件 exe（需先完成 frontend + pyinstaller） |
+| `build-dir-only` | 仅打包目录分发（需先完成 frontend + pyinstaller） |
 | `dev-backend`  | 仅启动 API（uvicorn --reload）   |
 | `dev-frontend` | 仅启动 Vite dev server          |
 | `clean`        | 清理 node_modules、dist、__pycache__ |

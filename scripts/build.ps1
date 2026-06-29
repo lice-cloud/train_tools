@@ -7,7 +7,7 @@ $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [En
 
 Write-Host "=== Building Train Tools ===" -ForegroundColor Cyan
 
-# 0. 检查/安装依赖
+# 检查 npm
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] npm not found. Install Node.js first." -ForegroundColor Red
     exit 1
@@ -29,25 +29,24 @@ if (-not (Test-Path $venvPython)) {
 }
 
 # 1. 构建前端
-Write-Host "[1/4] Building frontend..." -ForegroundColor Yellow
+Write-Host "[1/3] Building frontend..." -ForegroundColor Yellow
 Push-Location "$root\frontend"
-cmd.exe /c "npm.cmd install && npm.cmd run build"
+cmd.exe /c "npm install && npm run build"
 if ($LASTEXITCODE -ne 0) { throw "Frontend build failed" }
 Pop-Location
 
-# 2. 安装构建依赖（到 venv）
-Write-Host "[2/4] Installing build dependencies..." -ForegroundColor Yellow
-if ($haveUv) { uv pip install pyinstaller } else { python -m uv pip install pyinstaller } 2>&1
+# 2. 安装构建依赖
+Write-Host "[2/3] Installing PyInstaller..." -ForegroundColor Yellow
+& $venvPython -m ensurepip --upgrade 2>&1 | Out-Null
+& $venvPython -m pip install pyinstaller 2>&1
 if ($LASTEXITCODE -ne 0) { throw "pip install pyinstaller failed" }
 
-# 3. 清理旧构建
-Write-Host "[3/4] Cleaning old builds..." -ForegroundColor Yellow
+# 3. 打包单文件 exe
+Write-Host "[3/3] Packaging executable..." -ForegroundColor Yellow
 if (Test-Path "$root\dist") { cmd.exe /c "rmdir /s /q `"$root\dist`"" 2>&1 | Out-Null }
 if (Test-Path "$root\build") { Remove-Item -Recurse -Force "$root\build" -ErrorAction SilentlyContinue }
 Remove-Item -Force "$root\*.spec" -ErrorAction SilentlyContinue
 
-# 4. 打包单文件 exe
-Write-Host "[4/4] Packaging executable..." -ForegroundColor Yellow
 $pyArgs = @(
     '--noconfirm', '--onefile', '--windowed',
     '--name', 'train-tools',

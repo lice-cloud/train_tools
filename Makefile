@@ -1,23 +1,55 @@
 SHELL := powershell.exe
 
-.PHONY: all desktop build build-dir dev-backend dev-frontend clean
+.PHONY: all desktop dev-backend dev-frontend
+.PHONY: frontend pyinstaller clean-build build-exe build-dir-only
+.PHONY: build build-dir clean
 
 all: desktop
+
+# ==================== Development ====================
 
 desktop:
 	@powershell -ExecutionPolicy Bypass -File scripts\dev.ps1
 
-build:
-	@powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-
-build-dir:
-	@powershell -ExecutionPolicy Bypass -File scripts\build-dir.ps1
-
 dev-backend:
-	@$$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User"); $$env:ENV="dev"; uv run uvicorn backend.main:app --reload
+	@$$env:ENV="dev"; uv run uvicorn backend.main:app --reload
 
 dev-frontend:
-	@$$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User"); cmd.exe /c "cd /d frontend && npm.cmd run dev"
+	@cmd.exe /c "cd /d frontend && npm.cmd run dev"
+
+# ==================== Build Steps ====================
+
+frontend:
+	cmd.exe /c "cd /d frontend && npm install && npm run build"
+
+pyinstaller:
+	.venv\Scripts\python.exe -m ensurepip --upgrade 2>&1 | Out-Null
+	.venv\Scripts\python.exe -m pip install pyinstaller 2>&1
+
+clean-build:
+	cmd.exe /c "if exist dist rmdir /s /q dist"
+	cmd.exe /c "if exist build rmdir /s /q build"
+	cmd.exe /c "del /f /q *.spec 2>nul"
+
+build-exe:
+	python -m uv run pyinstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+
+build-dir-only:
+	python -m uv run pyinstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+
+# ==================== Convenience ====================
+
+build: frontend pyinstaller clean-build build-exe
+
+build-dir: frontend pyinstaller clean-build build-dir-only
+
+# ==================== Full Clean ====================
 
 clean:
-	@$$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User"); if (Test-Path frontend\node_modules) { Remove-Item -Recurse -Force frontend\node_modules }; if (Test-Path frontend\dist) { Remove-Item -Recurse -Force frontend\dist }; if (Test-Path build) { Remove-Item -Recurse -Force build }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }; Remove-Item -Force *.spec -ErrorAction SilentlyContinue; Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
+	cmd.exe /c "if exist frontend\node_modules rmdir /s /q frontend\node_modules"
+	cmd.exe /c "if exist frontend\dist rmdir /s /q frontend\dist"
+	cmd.exe /c "if exist .venv rmdir /s /q .venv"
+	cmd.exe /c "if exist dist rmdir /s /q dist"
+	cmd.exe /c "if exist build rmdir /s /q build"
+	cmd.exe /c "del /f /q *.spec 2>nul"
+	Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
