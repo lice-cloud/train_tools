@@ -10,13 +10,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
 
@@ -24,7 +24,7 @@ jobs:
         run: make build
 
       - name: Upload single-file exe
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: train-tools-exe
           path: dist/train-tools.exe
@@ -33,7 +33,7 @@ jobs:
         run: make build-dir
 
       - name: Upload directory distribution
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: train-tools-dir
           path: dist/train-tools/
