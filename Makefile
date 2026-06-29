@@ -17,12 +17,18 @@ dev-backend:
 dev-frontend:
 	@cmd.exe /c "cd /d frontend && npm.cmd run dev"
 
+# ==================== Virtual Env ====================
+
+.venv\Scripts\python.exe:
+	pip install uv 2>&1 | Out-Null
+	python -m uv sync
+
 # ==================== Build Steps ====================
 
 frontend:
 	cmd.exe /c "cd /d frontend && npm install && npm run build"
 
-pyinstaller:
+pyinstaller: .venv\Scripts\python.exe
 	.venv\Scripts\python.exe -m ensurepip --upgrade 2>&1 | Out-Null
 	.venv\Scripts\python.exe -m pip install pyinstaller 2>&1
 
@@ -31,10 +37,10 @@ clean-build:
 	cmd.exe /c "if exist build rmdir /s /q build"
 	cmd.exe /c "del /f /q *.spec 2>nul"
 
-build-exe:
+build-exe: .venv\Scripts\python.exe
 	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
 
-build-dir-only:
+build-dir-only: .venv\Scripts\python.exe
 	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
 
 # ==================== Convenience ====================
