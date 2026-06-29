@@ -1,14 +1,33 @@
 # Train Tools - 本地开发调试
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
+$venvPython = "$root\.venv\Scripts\python.exe"
 
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 
 Write-Host "=== Train Tools Dev ===" -ForegroundColor Cyan
 
+# 0. 检查/安装依赖
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] npm not found. Install Node.js first." -ForegroundColor Red
     exit 1
+}
+
+# 确保 venv 存在
+if (-not (Test-Path $venvPython)) {
+    Write-Host "[Setup] Creating venv and installing Python dependencies..." -ForegroundColor Yellow
+    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+        pip install uv 2>&1 | Out-Null
+    }
+    python -m uv sync
+    if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
+}
+
+# 安装前端依赖
+if (-not (Test-Path "$root\frontend\node_modules")) {
+    Write-Host "[Setup] Installing frontend dependencies..." -ForegroundColor Yellow
+    cmd.exe /c "cd /d $root\frontend && npm install"
+    if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
 }
 
 # 1. 启动 Vite dev server (后台)
@@ -32,7 +51,7 @@ try {
     # 2. 启动桌面应用
     $env:ENV = "dev"
     Write-Host "[Desktop] Launching pywebview..." -ForegroundColor Yellow
-    $result = uv run python -c "from backend.desktop import start_app; start_app()" 2>&1
+    $result = & $venvPython -c "from backend.desktop import start_app; start_app()" 2>&1
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Desktop app exited with code $LASTEXITCODE" -ForegroundColor Red
         Write-Host $result -ForegroundColor Red

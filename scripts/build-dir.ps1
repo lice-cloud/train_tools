@@ -1,11 +1,11 @@
-# Train Tools - 构建单文件 exe
+# Train Tools - 构建目录分发
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $venvPython = "$root\.venv\Scripts\python.exe"
 
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
 
-Write-Host "=== Building Train Tools ===" -ForegroundColor Cyan
+Write-Host "=== Building Train Tools (Directory) ===" -ForegroundColor Cyan
 
 # 0. 检查/安装依赖
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
@@ -42,10 +42,10 @@ if (Test-Path "$root\dist") { cmd.exe /c "rmdir /s /q `"$root\dist`"" 2>&1 | Out
 if (Test-Path "$root\build") { Remove-Item -Recurse -Force "$root\build" -ErrorAction SilentlyContinue }
 Remove-Item -Force "$root\*.spec" -ErrorAction SilentlyContinue
 
-# 4. 打包单文件 exe
-Write-Host "[4/4] Packaging executable..." -ForegroundColor Yellow
+# 4. 打包目录分发（--onedir）
+Write-Host "[4/4] Packaging directory..." -ForegroundColor Yellow
 & $venvPython -m PyInstaller `
-    --noconfirm --onefile --windowed `
+    --noconfirm --onedir --windowed `
     --name train-tools `
     "--add-data=$root\frontend\dist;frontend\dist" `
     --hidden-import webview `
@@ -55,4 +55,4 @@ Write-Host "[4/4] Packaging executable..." -ForegroundColor Yellow
     "$root\main.py"
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 
-Write-Host "=== Build complete: dist\train-tools.exe ===" -ForegroundColor Cyan
+Write-Host "=== Build complete: dist\train-tools\ ===" -ForegroundColor Cyan

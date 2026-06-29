@@ -1,6 +1,6 @@
 SHELL := powershell.exe
 
-.PHONY: all desktop build dev-backend dev-frontend clean
+.PHONY: all desktop build build-dir dev-backend dev-frontend clean
 
 all: desktop
 
@@ -9,6 +9,9 @@ desktop:
 
 build:
 	@powershell -ExecutionPolicy Bypass -File scripts\build.ps1
+
+build-dir:
+	@powershell -ExecutionPolicy Bypass -File scripts\build-dir.ps1
 
 dev-backend:
 	@$$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User"); $$env:ENV="dev"; uv run uvicorn backend.main:app --reload
