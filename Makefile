@@ -32,10 +32,10 @@ clean-build:
 	cmd.exe /c "del /f /q *.spec 2>nul"
 
 build-exe:
-	python -m uv run pyinstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onefile --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
 
 build-dir-only:
-	python -m uv run pyinstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
+	.venv\Scripts\python.exe -m PyInstaller --noconfirm --onedir --windowed --name train-tools --add-data "frontend\dist;frontend\dist" --hidden-import webview --hidden-import uvicorn --hidden-import fastapi --hidden-import backend.main main.py
 
 # ==================== Convenience ====================
 

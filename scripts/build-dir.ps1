@@ -13,18 +13,10 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# 确保 uv 可用
-$haveUv = $true
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    Write-Host "[Setup] uv not found, installing..." -ForegroundColor Yellow
-    pip install uv 2>&1 | Out-Null
-    $haveUv = $false
-}
-
 # 确保 venv 存在
 if (-not (Test-Path $venvPython)) {
     Write-Host "[Setup] Creating venv and installing Python dependencies..." -ForegroundColor Yellow
-    if ($haveUv) { uv sync } else { python -m uv sync }
+    if (Get-Command uv -ErrorAction SilentlyContinue) { uv sync } else { python -m uv sync }
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 }
 
@@ -47,7 +39,7 @@ if (Test-Path "$root\dist") { cmd.exe /c "rmdir /s /q `"$root\dist`"" 2>&1 | Out
 if (Test-Path "$root\build") { Remove-Item -Recurse -Force "$root\build" -ErrorAction SilentlyContinue }
 Remove-Item -Force "$root\*.spec" -ErrorAction SilentlyContinue
 
-$pyArgs = @(
+& $venvPython -m PyInstaller @(
     '--noconfirm', '--onedir', '--windowed',
     '--name', 'train-tools',
     "--add-data=$root\frontend\dist;frontend\dist",
@@ -57,7 +49,6 @@ $pyArgs = @(
     '--hidden-import', 'backend.main',
     "$root\main.py"
 )
-if ($haveUv) { & uv run pyinstaller @pyArgs } else { python -m uv run pyinstaller @pyArgs }
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 
 Write-Host "=== Build complete: dist\train-tools\ ===" -ForegroundColor Cyan
