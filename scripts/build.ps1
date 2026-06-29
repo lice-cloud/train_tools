@@ -48,15 +48,17 @@ Remove-Item -Force "$root\*.spec" -ErrorAction SilentlyContinue
 
 # 4. 打包单文件 exe
 Write-Host "[4/4] Packaging executable..." -ForegroundColor Yellow
-& $venvPython -m PyInstaller `
-    --noconfirm --onefile --windowed `
-    --name train-tools `
-    "--add-data=$root\frontend\dist;frontend\dist" `
-    --hidden-import webview `
-    --hidden-import uvicorn `
-    --hidden-import fastapi `
-    --hidden-import backend.main `
+$pyArgs = @(
+    '--noconfirm', '--onefile', '--windowed',
+    '--name', 'train-tools',
+    "--add-data=$root\frontend\dist;frontend\dist",
+    '--hidden-import', 'webview',
+    '--hidden-import', 'uvicorn',
+    '--hidden-import', 'fastapi',
+    '--hidden-import', 'backend.main',
     "$root\main.py"
+)
+if ($haveUv) { & uv run pyinstaller @pyArgs } else { python -m uv run pyinstaller @pyArgs }
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 
 Write-Host "=== Build complete: dist\train-tools.exe ===" -ForegroundColor Cyan
