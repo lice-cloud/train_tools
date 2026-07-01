@@ -11,7 +11,7 @@ from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
-CURRENT_VERSION = "1.0.0"
+CURRENT_VERSION = "1.0.1"
 
 
 def _get_current_version() -> str:
