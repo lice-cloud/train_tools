@@ -14,7 +14,7 @@ from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
-CURRENT_VERSION = "1.0.5"
+CURRENT_VERSION = "1.0.6"
 
 _download_state: dict = {}
 
@@ -28,6 +28,24 @@ def _get_current_version() -> str:
             return tomllib.load(f)["project"]["version"]
     except Exception:
         return CURRENT_VERSION
+
+
+def _writable_dir(path: str) -> bool:
+    try:
+        test = os.path.join(path, ".upd_test")
+        open(test, "w").close()
+        os.remove(test)
+        return True
+    except Exception:
+        return False
+
+
+def _exe_dir() -> str:
+    if getattr(sys, "frozen", False):
+        d = os.path.dirname(os.path.abspath(sys.argv[0]))
+        if _writable_dir(d):
+            return d
+    return tempfile.gettempdir()
 
 
 def _parse_version(s: str) -> tuple:
@@ -139,7 +157,7 @@ def _progress_hook(block: int, block_size: int, total_size: int):
 def _download_worker(url: str, expected_size: int):
     state = {"status": "downloading", "progress": 0, "int": None}
     _download_state["_int"] = state
-    dest = os.path.join(tempfile.gettempdir(), "train-tools-new.exe")
+    dest = os.path.join(_exe_dir(), "train-tools-new.exe")
     last_error = ""
     for attempt in range(3):
         if attempt > 0:
@@ -191,8 +209,9 @@ def apply_update() -> None:
         raise RuntimeError("No downloaded update found")
     current_exe = os.path.abspath(sys.argv[0])
     current_dir = os.path.dirname(current_exe)
-    log = os.path.join(tempfile.gettempdir(), "update-train-tools.log")
-    script = os.path.join(tempfile.gettempdir(), "update-train-tools.bat")
+    work_dir = _exe_dir()
+    log = os.path.join(work_dir, "update-train-tools.log")
+    script = os.path.join(work_dir, "update-train-tools.bat")
     pid = os.getpid()
     with open(script, "w") as f:
         f.write(f"""@echo off
