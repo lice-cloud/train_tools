@@ -14,7 +14,7 @@ from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
-CURRENT_VERSION = "1.0.4"
+CURRENT_VERSION = "1.0.5"
 
 _download_state: dict = {}
 
@@ -190,25 +190,50 @@ def apply_update() -> None:
     if not new_exe or not os.path.exists(new_exe):
         raise RuntimeError("No downloaded update found")
     current_exe = os.path.abspath(sys.argv[0])
+    current_dir = os.path.dirname(current_exe)
+    log = os.path.join(tempfile.gettempdir(), "update-train-tools.log")
     script = os.path.join(tempfile.gettempdir(), "update-train-tools.bat")
     pid = os.getpid()
     with open(script, "w") as f:
         f.write(f"""@echo off
+setlocal enabledelayedexpansion
+echo [%date% %time%] Starting update > "{log}"
 :wait
 tasklist /fi "PID eq {pid}" 2>nul | findstr "{pid}" >nul
 if not errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait
 )
-copy /y "{new_exe}" "{current_exe}" >nul 2>&1
+echo [%date% %time%] PID gone, copying >> "{log}"
+set tries=0
+:retry
+copy /y "{new_exe}" "{current_exe}" >> "{log}" 2>&1
 if errorlevel 1 (
-    timeout /t 2 /nobreak >nul
-    copy /y "{new_exe}" "{current_exe}" >nul 2>&1
+    set /a tries+=1
+    if !tries! lss 5 (
+        timeout /t 3 /nobreak >nul
+        goto retry
+    )
+    echo [%date% %time%] Copy failed after 5 tries >> "{log}"
+    exit /b 1
 )
-if errorlevel 1 exit /b 1
+echo [%date% %time%] Copy OK, verifying size >> "{log}"
+for %%A in ("{new_exe}") do set "src_size=%%~zA"
+for %%A in ("{current_exe}") do set "dst_size=%%~zA"
+if not "!src_size!"=="!dst_size!" (
+    echo [%date% %time%] Size mismatch: src=!src_size! dst=!dst_size! >> "{log}"
+    exit /b 1
+)
 del "{new_exe}" >nul 2>&1
-start "" /b "{current_exe}"
+echo [%date% %time%] Starting new exe >> "{log}"
+cd /d "{current_dir}"
+start "" "{current_exe}"
+echo [%date% %time%] Started >> "{log}"
 """)
-    subprocess.Popen(["cmd", "/c", script], close_fds=True)
-    time.sleep(0.5)
+    subprocess.Popen(
+        ["cmd", "/c", script],
+        close_fds=True,
+        creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0,
+    )
+    time.sleep(1)
     os._exit(0)
