@@ -1,10 +1,10 @@
 <template>
-  <UpdateBanner @close="showBanner = false" />
   <div class="app">
     <h1>Train Tools</h1>
     <p>{{ message }}</p>
     <button @click="fetchHealth">Check API</button>
   </div>
+  <UpdateBanner />
 </template>
 
 <script setup>
@@ -24,6 +24,7 @@ async function fetchHealth() {
 body {
   margin: 0;
   font-family: sans-serif;
+  padding-bottom: 30px;
 }
 .app {
   display: flex;
