@@ -12,7 +12,7 @@ from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
-CURRENT_VERSION = "1.0.1"
+CURRENT_VERSION = "1.0.2"
 
 _download_state = {"status": "idle", "progress": 0, "dest": ""}
 
