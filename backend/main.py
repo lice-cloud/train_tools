@@ -44,11 +44,12 @@ async def check_update_endpoint():
 
 class UpdateRequest(BaseModel):
     download_url: str
+    expected_size: int = 0
 
 
 @app.post("/api/update")
 async def update(req: UpdateRequest):
-    start_download(req.download_url)
+    start_download(req.download_url, req.expected_size)
     return {"status": "started"}
 
 

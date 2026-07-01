@@ -33,7 +33,7 @@
 <script setup>
 import { reactive, onMounted, ref } from "vue"
 
-const info = reactive({ state: "idle", current: null, latest: null, has_update: false, download_url: "", error: "" })
+const info = reactive({ state: "idle", current: null, latest: null, has_update: false, download_url: "", asset_size: 0, error: "" })
 const downloading = ref(false)
 const progress = ref(0)
 const dlStatus = ref("")
@@ -50,6 +50,7 @@ async function doCheck() {
     if (data.has_update) {
       info.has_update = true
       info.download_url = data.download_url || ""
+      info.asset_size = data.asset_size || 0
       info.state = "ok"
     } else if (data.error) {
       info.state = "error"
@@ -72,7 +73,7 @@ async function doDownload() {
     const r = await fetch("/api/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ download_url: info.download_url }),
+      body: JSON.stringify({ download_url: info.download_url, expected_size: info.asset_size || 0 }),
     })
     if (!r.ok) throw new Error("start failed")
     pollProgress()
