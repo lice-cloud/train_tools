@@ -14,7 +14,7 @@ from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
-CURRENT_VERSION = "1.0.6"
+CURRENT_VERSION = "1.0.7"
 
 _download_state: dict = {}
 
