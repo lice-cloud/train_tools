@@ -5,6 +5,7 @@ import urllib.request
 import urllib.error
 import tempfile
 import subprocess
+import re
 import tomllib
 from pathlib import Path
 
@@ -24,9 +25,20 @@ def _get_current_version() -> str:
         return CURRENT_VERSION
 
 
+import re
+
+def _parse_version(s: str) -> list:
+    parts = s.split(".")
+    result = []
+    for p in parts:
+        m = re.match(r"(\d+)", p)
+        result.append(int(m.group(1)) if m else 0)
+    return result
+
+
 def _compare_versions(a: str, b: str) -> int:
-    pa = [int(x) for x in a.split(".")]
-    pb = [int(x) for x in b.split(".")]
+    pa = _parse_version(a)
+    pb = _parse_version(b)
     max_l = max(len(pa), len(pb))
     pa += [0] * (max_l - len(pa))
     pb += [0] * (max_l - len(pb))
@@ -38,11 +50,19 @@ def _compare_versions(a: str, b: str) -> int:
     return 0
 
 
+def _auth_headers() -> dict:
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"token {token}"
+    return headers
+
+
 def check_update() -> dict:
     current = _get_current_version()
     url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
     try:
-        req = urllib.request.Request(url, headers={"Accept": "application/vnd.github.v3+json"})
+        req = urllib.request.Request(url, headers=_auth_headers())
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read())
 
