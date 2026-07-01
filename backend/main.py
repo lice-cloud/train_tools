@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 
-from backend.updater import check_update, download_update, apply_update
+from backend.updater import check_update, start_download, get_download_status, apply_update
 
 
 def _frontend_dist() -> Path:
@@ -48,6 +48,16 @@ class UpdateRequest(BaseModel):
 
 @app.post("/api/update")
 async def update(req: UpdateRequest):
-    new_exe = download_update(req.download_url)
-    threading.Thread(target=apply_update, args=(new_exe,), daemon=False).start()
-    return {"status": "updating"}
+    start_download(req.download_url)
+    return {"status": "started"}
+
+
+@app.get("/api/update-status")
+async def update_status():
+    return get_download_status()
+
+
+@app.post("/api/update-apply")
+async def update_apply():
+    threading.Thread(target=apply_update, daemon=False).start()
+    return {"status": "applying"}

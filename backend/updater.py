@@ -7,11 +7,14 @@ import tempfile
 import subprocess
 import re
 import tomllib
+import threading
 from pathlib import Path
 
 GITHUB_REPO = "lice-cloud/train_tools"
 
 CURRENT_VERSION = "1.0.1"
+
+_download_state = {"status": "idle", "progress": 0, "dest": ""}
 
 
 def _get_current_version() -> str:
@@ -24,8 +27,6 @@ def _get_current_version() -> str:
     except Exception:
         return CURRENT_VERSION
 
-
-import re
 
 def _parse_version(s: str) -> list:
     parts = s.split(".")
@@ -84,15 +85,41 @@ def check_update() -> dict:
         return {"has_update": False, "current_version": current, "error": str(e)}
 
 
-def download_update(url: str) -> str:
+def _progress_hook(block: int, block_size: int, total_size: int):
+    if total_size > 0:
+        pct = min(int(block * block_size * 100 / total_size), 100)
+        _download_state["progress"] = pct
+
+
+def _download_worker(url: str):
+    global _download_state
+    _download_state["status"] = "downloading"
+    _download_state["progress"] = 0
     dest = os.path.join(tempfile.gettempdir(), "train-tools-new.exe")
-    urllib.request.urlretrieve(url, dest)
-    return dest
+    try:
+        urllib.request.urlretrieve(url, dest, _progress_hook)
+        _download_state["status"] = "ready"
+        _download_state["dest"] = dest
+    except Exception as e:
+        _download_state["status"] = "error"
+        _download_state["error"] = str(e)
 
 
-def apply_update(new_exe: str) -> None:
+def start_download(url: str):
+    thread = threading.Thread(target=_download_worker, args=(url,), daemon=True)
+    thread.start()
+
+
+def get_download_status() -> dict:
+    return {k: _download_state.get(k) for k in ("status", "progress", "error")}
+
+
+def apply_update() -> None:
     if not getattr(sys, "frozen", False):
         raise RuntimeError("Update only works in frozen build")
+    new_exe = _download_state.get("dest", "")
+    if not new_exe or not os.path.exists(new_exe):
+        raise RuntimeError("No downloaded update found")
     current_exe = os.path.abspath(sys.argv[0])
     script = os.path.join(tempfile.gettempdir(), "update-train-tools.bat")
     with open(script, "w") as f:

@@ -11,17 +11,22 @@
     <span v-else-if="info.state === 'ok' && !info.has_update" class="msg">
       Up to date
     </span>
-    <button v-if="info.state !== 'checking'" class="btn" @click="doCheck">
+    <button v-if="info.state !== 'checking' && !downloading" class="btn" @click="doCheck">
       Check Updates
     </button>
     <button
-      v-if="info.state === 'ok' && info.has_update && info.download_url"
+      v-if="info.state === 'ok' && info.has_update && info.download_url && !downloading"
       class="btn dl"
-      :disabled="downloading"
       @click="doDownload"
     >
-      {{ downloading ? "Downloading..." : "Download" }}
+      Download Update
     </button>
+    <div v-if="downloading" class="progress-wrap">
+      <div class="progress-bar" :style="{ width: progress + '%' }"></div>
+      <span class="progress-text" v-if="dlStatus === 'downloading'">{{ progress }}%</span>
+      <span class="progress-text" v-else-if="dlStatus === 'ready'">Ready, restarting...</span>
+      <span class="progress-text" v-else-if="dlStatus === 'error'">Download failed</span>
+    </div>
   </div>
 </template>
 
@@ -30,6 +35,8 @@ import { reactive, onMounted, ref } from "vue"
 
 const info = reactive({ state: "idle", current: null, latest: null, has_update: false, download_url: "", error: "" })
 const downloading = ref(false)
+const progress = ref(0)
+const dlStatus = ref("")
 
 onMounted(doCheck)
 
@@ -59,16 +66,41 @@ async function doCheck() {
 
 async function doDownload() {
   downloading.value = true
+  progress.value = 0
+  dlStatus.value = "downloading"
   try {
-    await fetch("/api/update", {
+    const r = await fetch("/api/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ download_url: info.download_url }),
     })
+    if (!r.ok) throw new Error("start failed")
+    pollProgress()
   } catch {
-    info.error = "Download failed"
+    dlStatus.value = "error"
     downloading.value = false
   }
+}
+
+async function pollProgress() {
+  const interval = setInterval(async () => {
+    try {
+      const r = await fetch("/api/update-status")
+      const s = await r.json()
+      progress.value = s.progress || 0
+      dlStatus.value = s.status
+      if (s.status === "ready") {
+        clearInterval(interval)
+        await fetch("/api/update-apply", { method: "POST" })
+      } else if (s.status === "error") {
+        clearInterval(interval)
+        setTimeout(() => { downloading.value = false }, 3000)
+      }
+    } catch {
+      clearInterval(interval)
+      dlStatus.value = "error"
+    }
+  }, 500)
 }
 </script>
 
@@ -101,4 +133,28 @@ async function doDownload() {
 }
 .btn.dl { background: #1a73e8; color: #fff; font-weight: 600; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.progress-wrap {
+  flex: 1;
+  height: 16px;
+  background: #ddd;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: #1a73e8;
+  border-radius: 8px;
+  transition: width 0.3s;
+}
+.progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #333;
+  font-weight: 600;
+}
 </style>
