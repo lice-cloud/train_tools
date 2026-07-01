@@ -1,4 +1,5 @@
 <template>
+  <UpdateBanner @close="showBanner = false" />
   <div class="app">
     <h1>Train Tools</h1>
     <p>{{ message }}</p>
@@ -7,12 +8,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue"
+import UpdateBanner from "./components/UpdateBanner.vue"
 
-const message = ref('Welcome to Train Tools')
+const message = ref("Welcome to Train Tools")
 
 async function fetchHealth() {
-  const res = await fetch('/api/health')
+  const res = await fetch("/api/health")
   const data = await res.json()
   message.value = JSON.stringify(data)
 }
